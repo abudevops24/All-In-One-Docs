@@ -1,0 +1,55 @@
+# Use an official PHP 5.6 image with Apache as a parent image
+FROM php:5.6-apache
+ 
+# Set the working directory in the container
+WORKDIR /usr/local/apache/htdocs
+ 
+# Install Vim editor (optional)
+# RUN apt-get update && \
+#    apt-get install -y vim && \
+#    apt-get clean
+ 
+# Create log directories
+RUN mkdir -p /mnt/logs/mobilyvboxLogs && \
+    mkdir -p /mnt/logs/saavnDdexLogs && \
+    mkdir -p /mnt/logs/amazonddexLogs && \
+    mkdir -p /mnt/logs/pk_jazzLogs
+ 
+# Create content directories
+RUN mkdir -p /mnt/content/mobilyvbox && \
+    mkdir -p /mnt/content/JIOSAAVN_DDEX/INSERT && \
+    mkdir -p /mnt/content/JIOSAAVN_DDEX/UPDATE && \
+    mkdir -p /mnt/content/JIOSAAVN_DDEX/TAKEDOWN && \
+    mkdir -p /mnt/content/AMAZON_DDEX/INSERT && \
+    mkdir -p /mnt/content/AMAZON_DDEX/UPDATE && \
+    mkdir -p /mnt/content/AMAZON_DDEX/TAKEDOWN && \
+    mkdir -p /mnt/content/pk_jazz
+ 
+# Copy the current directory contents into the container at /usr/local/apache/htdocs
+COPY . /usr/local/apache/htdocs
+ 
+# Update Apache configuration to point to the new document root
+RUN sed -i 's|/var/www/html|/usr/local/apache/htdocs|g' /etc/apache2/sites-available/000-default.conf && \
+    sed -i 's|/var/www/html|/usr/local/apache/htdocs|g' /etc/apache2/apache2.conf && \
+    sed -i 's|/var/www|/usr/local/apache|g' /etc/apache2/apache2.conf
+ 
+# Disable directory indexing in Apache configuration
+RUN echo "<Directory /usr/local/apache/htdocs>" >> /etc/apache2/apache2.conf && \
+    echo "    Options -Indexes" >> /etc/apache2/apache2.conf && \
+    echo "</Directory>" >> /etc/apache2/apache2.conf
+ 
+# Set appropriate permissions
+RUN chown -R www-data:www-data /usr/local/apache/htdocs && \
+    chmod -R 755 /usr/local/apache/htdocs
+ 
+# Install any needed extensions for PHP 5.6
+# For example, if you need mysqli extension:
+RUN docker-php-ext-install pdo_mysql mysql
+ 
+# If you have additional dependencies, you can install them here
+ 
+# Expose port 80 to allow outside access to our application
+EXPOSE 80
+ 
+# By default, simply start Apache when the container starts
+CMD ["apache2-foreground"]
